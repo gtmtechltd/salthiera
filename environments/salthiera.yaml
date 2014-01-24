@@ -1,0 +1,8 @@
+---
+hierarchy:
+  - files:environments/%{environment}/files/*
+  - yaml:environments/%{environment}/%{id}/*.yaml
+  - yaml:environments/%{environment}/default.yaml
+  - yaml:environments/defaults.yaml
+  - eyaml:environments/%{environment}/%{id}/*.eyaml
+

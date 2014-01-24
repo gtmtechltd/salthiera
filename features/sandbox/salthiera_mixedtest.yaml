@@ -1,0 +1,13 @@
+hierarchy:
+  - files:environments/override_files/files/*
+  - yaml:environments/override_yaml/*.yaml
+  - eyaml:environments/override_eyaml/*.eyaml
+  - files:environments/common/files/*
+  - yaml:environments/common/*.yaml
+  - eyaml:environments/common/*.eyaml
+  - files:environments/test_files/files/*
+  - yaml:environments/test_yaml/defaults.yaml
+  - eyaml:environments/test_eyaml/*.eyaml
+
+eyaml_private_key: ./keys/pkcs7.private_key
+eyaml_public_key: ./keys/pkcs7.public_key

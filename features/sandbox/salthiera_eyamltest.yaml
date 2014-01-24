@@ -1,0 +1,8 @@
+hierarchy:
+  - eyaml:environments/override/*.eyaml
+  - eyaml:environments/%{environment}/*.eyaml
+  - eyaml:environments/common/defaults.eyaml
+
+eyaml_private_key: ./keys/pkcs7.private_key
+eyaml_public_key: ./keys/pkcs7.public_key
+

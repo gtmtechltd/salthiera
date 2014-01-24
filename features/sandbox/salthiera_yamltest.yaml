@@ -1,0 +1,5 @@
+hierarchy:
+  - yaml:environments/override/*.yaml
+  - yaml:environments/%{environment}/*.yaml
+  - yaml:environments/common/defaults.yaml
+

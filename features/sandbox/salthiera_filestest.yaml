@@ -1,0 +1,5 @@
+hierarchy:
+  - files:environments/override/files/*
+  - files:environments/%{environment}/files/*
+  - files:environments/common/files/*
+
