@@ -1,5 +1,5 @@
 hierarchy:
-  - eyaml:environments/override/*.eyaml
+  - eyaml:environments/override_eyaml/*.eyaml
   - eyaml:environments/%{environment}/*.eyaml
   - eyaml:environments/common/defaults.eyaml
 

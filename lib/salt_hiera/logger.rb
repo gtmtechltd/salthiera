@@ -46,10 +46,10 @@ module SaltHiera
 
     def self.raw level, msg
       self.logfile "/tmp/salthiera.log"
-      if @@loglevels[level] && @@loglevels[level] > @@loglevels[@@loglevel] then
+#      if @@loglevels[level] && @@loglevels[level] > @@loglevels[@@loglevel] then
         @@log.write "[#{level.to_s}]: #{msg}\n"
         @@log.flush
-      end
+#      end
     end
 
   end

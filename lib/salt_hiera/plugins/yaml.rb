@@ -6,7 +6,7 @@ module SaltHiera
 
         contents = File.read file
         dict = YAML.load contents
-        dict
+        dict || {}
 
       end
 

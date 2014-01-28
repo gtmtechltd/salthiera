@@ -1,5 +1,6 @@
 require 'yaml'
 require 'salt_hiera/logger'
+require 'salt_hiera/configuration'
 require 'salt_hiera/plugins/no_plugin'
 
 module SaltHiera
@@ -14,6 +15,10 @@ class SaltHiera
       @config = YAML::load(file_contents)
     rescue
       raise "Problem reading from config file #{attributes[:config_file]} (invalid YAML/permissions?)"
+    end
+
+    @config.each do |k, v|
+      Configuration.set k, v
     end
 
     Logger.logfile(@config[:logfile])
@@ -46,7 +51,7 @@ class SaltHiera
 
     results = {}
 
-    @config["hierarchy"].each do |hierarchy|
+    @config["hierarchy"].reverse.each do |hierarchy|
       Logger.debug "Analysing hierarchy element: #{hierarchy}"
       hierarchy_type, hierarchy_glob = hierarchy.split(':', 2)
       Logger.debug "    type: #{hierarchy_type}"
