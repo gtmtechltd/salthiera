@@ -21,20 +21,26 @@ Setup
 
     $ gem install salthiera
 
-### Define a salthiera.yaml configuration file
+### Copy the salthiera.py plugin to your salthiera external pillar directory. E.g.
 
-    $ chown -R puppet:puppet /etc/puppet/secure/keys
-    $ chmod -R 0500 /etc/puppet/secure/keys
-    $ chmod 0400 /etc/puppet/secure/keys/*.pem
-    $ ls -lha /etc/puppet/secure/keys
-    -r-------- 1 puppet puppet 1.7K Sep 24 16:24 private_key.pkcs7.pem
-    -r-------- 1 puppet puppet 1.1K Sep 24 16:24 public_key.pkcs7.pem
+    $ cp salt/pillar/salthiera.py /usr/lib/pymodules/python2.7/salt/pillar/salthiera.py
 
-### Use it to lookup data!
+### Define your own salthiera.yaml configuration file. E.g.
+
+    hierarchy:
+      - yaml:environments/%{saltenv}/*.yaml
+      - files:environemtns/%{saltenv}/files/**/*
+
+### Use it to lookup data outside salt!
 
     $ salthiera -c /etc/salthiera.yaml key1=value1 key2=value
 
-SaltHiera supports keys, values
+### Use it to lookup data inside salt!
+
+    $ salt '*' pillar.get key1
+
+
+Lots more documentation soon
 
 
 Authors
