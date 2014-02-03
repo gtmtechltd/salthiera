@@ -6,9 +6,11 @@ require 'salt_hiera/plugins/no_plugin'
 module SaltHiera
 class SaltHiera
 
+  VERSION="0.1"
+
   def initialize attributes
     raise "Config error (#{params})" unless attributes[:config_file]
-    raise "Config file doesn't exist" unless File.file? attributes[:config_file]
+    raise "Config file (#{attributes[:config_file]}) doesn't exist" unless File.file? attributes[:config_file]
 
     file_contents = File.read(attributes[:config_file])
     begin

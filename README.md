@@ -1,7 +1,7 @@
 SaltHiera
 =========
 
-[![Build Status](https://travis-ci.org/Gtmtechltd/salthiera.png?branch=master)](https://travis-ci.org/Gtmtechltd/salthiera)
+[![Build Status](https://travis-ci.org/Gtmtechltd/salthiera.png?branch=master)](https://travis-ci.org/gtmtechltd/salthiera)
 
 salthiera is a hiera-like tool which is designed to work with SaltStack Pillars via the ext_pillar option.
 
