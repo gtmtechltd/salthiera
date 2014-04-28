@@ -17,6 +17,8 @@ Setup
 
 ### Installing salthiera
 
+    (on saltmaster only)
+
     $ gem install salthiera
 
 
@@ -34,7 +36,7 @@ Setup
       - efiles:/srv/salt/environments/%{saltenvironment}/efiles/**/*
       - efiles:/srv/salt/environments/common/efiles/**/*
 
-In the above hierarchy (defined in salthiera.yaml), the specific environment YAML always overrides the common environment YAML, because it is referenced earlier in the hierarchy section. The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
+Items that appear earlier in the hierarchy override items that appear later in the hierarchy. In the above hierarchy (defined in salthiera.yaml), the specific environment YAML (parameterised as %{saltenvironment} always overrides the common environment YAML, because it is referenced earlier in the hierarchy section. The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
 
 ### Put some example YAML files together (representing your environment-based data)
 
@@ -47,61 +49,14 @@ In the above hierarchy (defined in salthiera.yaml), the specific environment YAM
     my_string: I am the common value
     default_string: I am the common default value
 
-### Generate keys for encrypting stuff LOCALLY (if you dont want to do this, then bypass this section)
-
-    (on your local desktop)
-
-    $ gem install hiera-eyaml
-    $ cd /tmp
-    $ eyaml createkeys         # keys will be created in a keys/ subdirectory
-    $ ls keys/
-      private_key.pkcs7.pem  public_key.pkcs7.pem
-
-### Encrypt a sensitive password like this
-
-    $ eyaml encrypt --pkcs7-public-key keys/public_key.pkcs7.pem -s "SOME STRING TO ENCRYPT"
-      ENC[PKCS7,..........]
-   
-    Copy this ENC string into any .eyaml file in your environments data
-
-    # /srvsalt/environments/production/database.eyaml
-    ---
-    database_password: ENC[PKCS7,............]
-
-    For further information see the hiera-eyaml project to see how to interactively edit eyaml files with encrypted text.
-
-    Copy the public_key.pkcs7.pem into your salt git repo somewhere nice (you can publish this to your dev team)
-
-### Set up the salt-master to decrypt the values
- 
-    Copy the public and private keys into your saltmaster in a secure place:
-
-    (on your saltmaster)
-
-    $ mkdir -p /etc/salt/salthiera/keys
-    $ chown -R root:root /etc/salt/salthiera/keys
-    $ chmod -R 0500 /etc/salt/salthiera/keys
-
-    Edit /etc/salt/salthiera.yaml and add:
-
-    eyaml_public_key: /etc/salt/salthiera/keys/public_key.pkcs7.pem
-    eyaml_private_key: /etc/salt/salthiera/keys/private_key.pkcs7.pem
-
-    Ensure keys directory exists
-       
-    $ chmod 0400 /etc/salt/salthiera/keys/*.pem
-    $ ls -lha /etc/salt/salthiera/keys
-    -r-------- 1 root   root   1.7K Sep 24 16:24 private_key.pkcs7.pem
-    -r-------- 1 root   root   1.1K Sep 24 16:24 public_key.pkcs7.pem
-
 ### Use salthiera on the saltmaster to lookup data on the commandline!
 
     (saltmaster)
 
-    $ salthiera -c /etc/salt/salthiera.yaml key1=value1 key2=value 
+    $ salthiera -c /etc/salt/salthiera.yaml key1=value1 key2=value
 
     e.g.
- 
+
     $ salthiera -c /etc/salt/salthiera.yaml saltenvironment=production id=dmzserver01
 
     (the keys and values you supply relate directly to the %{} delimeters in your salthiera.yaml config file (above)
@@ -124,14 +79,14 @@ In the above hierarchy (defined in salthiera.yaml), the specific environment YAM
 
 ### Configure a salt minion with its environment
 
-    # /etc/salt/minion config file 
+    # /etc/salt/minion config file
 
     ...
     grains:
       saltenvironment: production    # different on different environments
     ...
 
-### Test on the minion 
+### Test on the minion
 
     $ salt-call pillar.get my_string
     > I am the production value
@@ -139,15 +94,68 @@ In the above hierarchy (defined in salthiera.yaml), the specific environment YAM
     $ salt-call pillar.get default_string
     > I am the common default value
 
+In this way you can manage key-value pairs, using YAML, or entire files which makes it easier to manage keys, binary files etc.
 
-In this way you can manage key-value pairs, using YAML, or entire files which makes it easier to manage keys, binary files etc. 
+Encryption
+==========
+
+Salthiera support encrypting using the PKCS7 encryption format. Salthiera has a "sister" project for puppet called hiera-eyaml, which we will use on our local machine to manage the encryption. Hiera-eyaml does not need to be installed anywhere else.
+
+### Generate keys for encrypting stuff LOCALLY (if you dont want to do this, then bypass this section)
+
+    (on your local desktop)
+
+    $ gem install hiera-eyaml
+    $ cd /tmp
+    $ eyaml createkeys         # keys will be created in a keys/ subdirectory
+    $ ls keys/
+      private_key.pkcs7.pem  public_key.pkcs7.pem
+
+### Encrypt a sensitive password like this
+
+    $ eyaml encrypt --pkcs7-public-key keys/public_key.pkcs7.pem -s "SOME STRING TO ENCRYPT"
+      ENC[PKCS7,..........]
+   
+    Copy this ENC string into any .eyaml file in your salt git repo (environments data)
+
+    # /srv/salt/environments/production/database.eyaml
+    ---
+    database_password: ENC[PKCS7,............]
+
+    You would typically generate different keys for different environments and use the correct environments keys to generate encrypted data for that environment. 
+
+    Hiera-eyaml toolset allows you to do a lot of things, for example you can interactively edit an .eyaml file using vi, replacing the encrypted tokens in realtime. For further information see the hiera-eyaml project to see all the possibilities available to you
+
+    When done, copy the public_key.pkcs7.pem into your salt git repo somewhere nice (you can publish this to your dev team)
+
+### Set up the salt-master to decrypt the values
+ 
+    Copy the public and private keys you generated above into your saltmaster in a secure place:
+
+    (on your saltmaster)
+
+    $ mkdir -p /etc/salt/salthiera/keys
+    $ chown -R root:root /etc/salt/salthiera/keys
+    $ chmod -R 0500 /etc/salt/salthiera/keys
+
+    Edit /etc/salt/salthiera.yaml and add:
+
+    eyaml_public_key: /etc/salt/salthiera/keys/public_key.pkcs7.pem
+    eyaml_private_key: /etc/salt/salthiera/keys/private_key.pkcs7.pem
+
+    Ensure keys directory exists
+       
+    $ chmod 0400 /etc/salt/salthiera/keys/*.pem
+    $ ls -lha /etc/salt/salthiera/keys
+    -r-------- 1 root   root   1.7K Sep 24 16:24 private_key.pkcs7.pem
+    -r-------- 1 root   root   1.1K Sep 24 16:24 public_key.pkcs7.pem
 
 You need a public key and a private key to decrypt a value, but only a public to encrypt a value. In this way, you can distribute your public key to your dev team so they are able to encrypt values and commit them to your salt git repo, and only the saltmaster itself can decrypt the value. This allows you to commit production data alongside your vagrant/dev/staging data in the same repo in safe way.
 
 TROUBLESHOOTING
 ---------------
 
-If for some reason salt isnt returning the values, but salthiera commandline executed properly as above is, then the chances are that salt cannot find the "salthiera" binary that comes with this gem. If so, alter the salt.utils.which value in /usr/share/pyshared/salt/pillar/salthiera.py that refers to the salthiera binary and supply the fully qualified path to the salthiera binary (and likewise lower in the code too). This will fix this problem.
+If for some reason salt isnt returning ANY values (either plaintext or encyrpted), but salthiera commandline lookups executed properly as explained above is, then the chances are that salt cannot find the "salthiera" binary that comes with this gem. If so, alter the salt.utils.which value in /usr/share/pyshared/salt/pillar/salthiera.py that refers to the salthiera binary and supply the fully qualified path to the salthiera binary (and likewise lower in the code too). This will fix this problem.
 
 Authors
 -------
