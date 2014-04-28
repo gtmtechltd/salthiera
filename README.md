@@ -36,7 +36,11 @@ Setup
       - efiles:/srv/salt/environments/%{saltenvironment}/efiles/**/*
       - efiles:/srv/salt/environments/common/efiles/**/*
 
-Items that appear earlier in the hierarchy override items that appear later in the hierarchy. In the above hierarchy (defined in salthiera.yaml), the specific environment YAML (parameterised as %{saltenvironment} always overrides the common environment YAML, because it is referenced earlier in the hierarchy section. The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
+Items that appear earlier in the hierarchy override items that appear later in the hierarchy. 
+
+In the above hierarchy (defined in salthiera.yaml), the specific environment YAML (parameterised as %{saltenvironment} always overrides the common environment YAML, because it is referenced earlier in the hierarchy section. 
+
+The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
 
 ### Put some example YAML files together (representing your environment-based data)
 
