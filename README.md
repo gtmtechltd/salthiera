@@ -1,7 +1,7 @@
 SaltHiera
 =========
 
-[![Build Status](https://travis-ci.org/Gtmtechltd/salthiera.png?branch=master)](https://travis-ci.org/Gtmtechltd/salthiera)
+[![Build Status](https://travis-ci.org/Gtmtechltd/salthiera.png?branch=master)](https://travis-ci.org/gtmtechltd/salthiera)
 
 salthiera is a hiera-like tool which is designed to work with SaltStack Pillars via the ext_pillar option.
 
@@ -21,21 +21,95 @@ Setup
 
     $ gem install salthiera
 
-### Define a salthiera.yaml configuration file
+### Define a /etc/salt/salthiera.yaml configuration file
 
-    $ chown -R puppet:puppet /etc/puppet/secure/keys
-    $ chmod -R 0500 /etc/puppet/secure/keys
-    $ chmod 0400 /etc/puppet/secure/keys/*.pem
-    $ ls -lha /etc/puppet/secure/keys
-    -r-------- 1 puppet puppet 1.7K Sep 24 16:24 private_key.pkcs7.pem
-    -r-------- 1 puppet puppet 1.1K Sep 24 16:24 public_key.pkcs7.pem
+    ---
+    eyaml_public_key: /etc/salt/salthiera/keys/public_key.pkcs7.pem
+    eyaml_private_key: /etc/salt/salthiera/keys/private_key.pkcs7.pem
 
-### Use it to lookup data!
+    hierarchy:
+      - yaml:/srv/salt/environments/%{saltenvironment}/*.yaml.%{id}   # e.g. production/haproxy.yaml.dmzserver01
+      - yaml:/srv/salt/environments/%{saltenvironment}/*.yaml         # e.g. production/haproxy.yaml
+      - yaml:/srv/salt/environments/common/*.yaml                     # e.g. common/haproxy.yaml
+      - files:/srv/salt/environments/%{saltenvironment}/files/**/*
+      - files:/srv/salt/environments/common/files/**/*
+      - eyaml:/srv/salt/environments/%{saltenvironment}/**/*.eyaml
+      - eyaml:/srv/salt/environments/common/**/*.eyaml
+      - efiles:/srv/salt/environments/%{saltenvironment}/efiles/**/*
+      - efiles:/srv/salt/environments/common/efiles/**/*
 
-    $ salthiera -c /etc/salthiera.yaml key1=value1 key2=value
+### Put some example YAML files together (representing your environment-based data)
 
-SaltHiera supports keys, values
+    # /srv/salt/environments/production/example.yaml
+    ---
+    my_string: I am the production value
+    
+    # /srv/salt/environments/common/example.yaml
+    ---
+    my_string: I am the common value
+    default_string: I am the common default value
 
+### Ensure keys directory exists
+       
+    $ mkdir -p /etc/salt/salthiera/keys
+    $ chown -R root:root /etc/salt/salthiera/keys
+    $ chmod -R 0500 /etc/salt/salthiera/keys
+    $ chmod 0400 /etc/salt/salthiera/keys/*.pem
+    $ ls -lha /etc/salt/salthiera/keys
+    -r-------- 1 root   root   1.7K Sep 24 16:24 private_key.pkcs7.pem
+    -r-------- 1 root   root   1.1K Sep 24 16:24 public_key.pkcs7.pem
+
+### Use it to lookup data on the commandline!
+
+    $ salthiera -c /etc/salt/salthiera.yaml key1=value1 key2=value 
+
+    e.g.
+ 
+    $ salthiera -c /etc/salt/salthiera.yaml saltenvironment=production id=dmzserver01
+
+### Configure salt to do this automatically as part of its external pillar processes:
+
+    # /etc/salt/master configuration file for saltmaster
+
+    ...
+    ext_pillar:
+      - salthiera: /etc/salt/salthiera.yaml
+    ...
+
+    #pillar_roots:  (comment this out unless you want to use pillar in conjunction with salthiera)
+
+### Copy the salthiera.py file in this repos salt/pillar directory into salts pymodules (will depend on your python version and install location)
+
+    $ cp salt/pillar/salthiera.py /usr/share/pyshared/salt/pillar/salthiera.py
+    $ ln -s /usr/share/pyshared/salt/pillar/salthiera.py /usr/lib/pymodules/python2.7/salt/pillar/salthiera.py
+
+### Configure a salt minion with its environment
+
+    # /etc/salt/minion config file 
+
+    ...
+    grains:
+      saltenvironment: production    # different on different environments
+    ...
+
+### Test on the minion 
+
+    $ salt-call pillar.get my_string
+    > I am the production value
+
+    $ salt-call pillar.get default_string
+    > I am the common default value
+
+In the above hierarchy (defined in salthiera.yaml), the specific environment YAML always overrides the common environment YAML, because it is referenced earlier in the hierarchy section. The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
+
+In this way you can manage key-value pairs, using YAML, or entire files which makes it easier to manage keys, binary files etc. 
+
+You need a public key and a private key to decrypt a value, but only a public to encrypt a value. In this way, you can distribute your public key to your dev team so they are able to encrypt values and commit them to your salt git repo, and only the saltmaster itself can decrypt the value. This allows you to commit production data alongside your vagrant/dev/staging data in the same repo in safe way.
+
+TROUBLESHOOTING
+---------------
+
+If for some reason salt isnt returning the values, but salthiera commandline executed properly as above is, then the chances are that salt cannot find the "salthiera" binary that comes with this gem. If so, alter the salt.utils.which value in /usr/share/pyshared/salt/pillar/salthiera.py that refers to the salthiera binary and supply the fully qualified path to the salthiera binary (and likewise lower in the code too). This will fix this problem.
 
 Authors
 -------
