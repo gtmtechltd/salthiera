@@ -44,30 +44,32 @@ The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are e
 
 ### Put some example YAML files together (representing your environment-based data)
 
-    # /srv/salt/environments/production/example.yaml
+/srv/salt/environments/production/example.yaml
+
     ---
     my_string: I am the production value
     
-    # /srv/salt/environments/common/example.yaml
+/srv/salt/environments/common/example.yaml
+
     ---
     my_string: I am the common value
     default_string: I am the common default value
 
 ### Use salthiera on the saltmaster to lookup data on the commandline!
 
-    (saltmaster)
+(saltmaster)
 
     $ salthiera -c /etc/salt/salthiera.yaml key1=value1 key2=value
 
-    e.g.
+e.g.
 
     $ salthiera -c /etc/salt/salthiera.yaml saltenvironment=production id=dmzserver01
 
-    (the keys and values you supply relate directly to the %{} delimeters in your salthiera.yaml config file (above)
+(the keys and values you supply relate directly to the %{} delimeters in your salthiera.yaml config file (above)
 
 ### Configure salt to do this automatically as part of its external pillar processes:
 
-    # /etc/salt/master configuration file for saltmaster
+/etc/salt/master configuration file for saltmaster
 
     ...
     ext_pillar:
@@ -81,7 +83,7 @@ The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are e
     $ cp salt/pillar/salthiera.py /usr/share/pyshared/salt/pillar/salthiera.py
     $ ln -s /usr/share/pyshared/salt/pillar/salthiera.py /usr/lib/pymodules/python2.7/salt/pillar/salthiera.py
 
-### Configure a salt minion with its environment
+#### Configure a salt minion with its environment
 
     # /etc/salt/minion config file
 
@@ -120,34 +122,35 @@ Salthiera support encrypting using the PKCS7 encryption format. Salthiera has a 
     $ eyaml encrypt --pkcs7-public-key keys/public_key.pkcs7.pem -s "SOME STRING TO ENCRYPT"
       ENC[PKCS7,..........]
    
-    Copy this ENC string into any .eyaml file in your salt git repo (environments data)
+ Copy this ENC string into any .eyaml file in your salt git repo (environments data)
 
-    # /srv/salt/environments/production/database.eyaml
+  /srv/salt/environments/production/database.eyaml
+
     ---
     database_password: ENC[PKCS7,............]
 
-    You would typically generate different keys for different environments and use the correct environments keys to generate encrypted data for that environment. 
+You would typically generate different keys for different environments and use the correct environments keys to generate encrypted data for that environment. 
 
-    Hiera-eyaml toolset allows you to do a lot of things, for example you can interactively edit an .eyaml file using vi, replacing the encrypted tokens in realtime. For further information see the hiera-eyaml project to see all the possibilities available to you
+Hiera-eyaml toolset allows you to do a lot of things, for example you can interactively edit an .eyaml file using vi, replacing the encrypted tokens in realtime. For further information see the hiera-eyaml project to see all the possibilities available to you
 
-    When done, copy the public_key.pkcs7.pem into your salt git repo somewhere nice (you can publish this to your dev team)
+When done, copy the public_key.pkcs7.pem into your salt git repo somewhere nice (you can publish this to your dev team)
 
 ### Set up the salt-master to decrypt the values
  
-    Copy the public and private keys you generated above into your saltmaster in a secure place:
+Copy the public and private keys you generated above into your saltmaster in a secure place:
 
-    (on your saltmaster)
+(on your saltmaster)
 
     $ mkdir -p /etc/salt/salthiera/keys
     $ chown -R root:root /etc/salt/salthiera/keys
     $ chmod -R 0500 /etc/salt/salthiera/keys
 
-    Edit /etc/salt/salthiera.yaml and add:
+Edit /etc/salt/salthiera.yaml and add:
 
     eyaml_public_key: /etc/salt/salthiera/keys/public_key.pkcs7.pem
     eyaml_private_key: /etc/salt/salthiera/keys/private_key.pkcs7.pem
 
-    Ensure keys directory exists
+Ensure keys directory exists
        
     $ chmod 0400 /etc/salt/salthiera/keys/*.pem
     $ ls -lha /etc/salt/salthiera/keys
