@@ -21,12 +21,10 @@ Setup
 
     $ gem install salthiera
 
+
 ### Define a /etc/salt/salthiera.yaml configuration file
 
     ---
-    eyaml_public_key: /etc/salt/salthiera/keys/public_key.pkcs7.pem
-    eyaml_private_key: /etc/salt/salthiera/keys/private_key.pkcs7.pem
-
     hierarchy:
       - yaml:/srv/salt/environments/%{saltenvironment}/*.yaml.%{id}   # e.g. production/haproxy.yaml.dmzserver01
       - yaml:/srv/salt/environments/%{saltenvironment}/*.yaml         # e.g. production/haproxy.yaml
@@ -37,6 +35,8 @@ Setup
       - eyaml:/srv/salt/environments/common/**/*.eyaml
       - efiles:/srv/salt/environments/%{saltenvironment}/efiles/**/*
       - efiles:/srv/salt/environments/common/efiles/**/*
+
+In the above hierarchy (defined in salthiera.yaml), the specific environment YAML always overrides the common environment YAML, because it is referenced earlier in the hierarchy section. The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
 
 ### Put some example YAML files together (representing your environment-based data)
 
@@ -49,23 +49,64 @@ Setup
     my_string: I am the common value
     default_string: I am the common default value
 
-### Ensure keys directory exists
-       
+### Generate keys for encrypting stuff LOCALLY (if you dont want to do this, then bypass this section)
+
+    (on your local desktop)
+
+    $ gem install hiera-eyaml
+    $ cd /tmp
+    $ eyaml createkeys         # keys will be created in a keys/ subdirectory
+    $ ls keys/
+      private_key.pkcs7.pem  public_key.pkcs7.pem
+
+### Encrypt a sensitive password like this
+
+    $ eyaml encrypt --pkcs7-public-key keys/public_key.pkcs7.pem -s "SOME STRING TO ENCRYPT"
+      ENC[PKCS7,..........]
+   
+    Copy this ENC string into any .eyaml file in your environments data
+
+    # /srvsalt/environments/production/database.eyaml
+    ---
+    database_password: ENC[PKCS7,............]
+
+    For further information see the hiera-eyaml project to see how to interactively edit eyaml files with encrypted text.
+
+    Copy the public_key.pkcs7.pem into your salt git repo somewhere nice (you can publish this to your dev team)
+
+### Set up the salt-master to decrypt the values
+ 
+    Copy the public and private keys into your saltmaster in a secure place:
+
+    (on your saltmaster)
+
     $ mkdir -p /etc/salt/salthiera/keys
     $ chown -R root:root /etc/salt/salthiera/keys
     $ chmod -R 0500 /etc/salt/salthiera/keys
+
+    Edit /etc/salt/salthiera.yaml and add:
+
+    eyaml_public_key: /etc/salt/salthiera/keys/public_key.pkcs7.pem
+    eyaml_private_key: /etc/salt/salthiera/keys/private_key.pkcs7.pem
+
+    Ensure keys directory exists
+       
     $ chmod 0400 /etc/salt/salthiera/keys/*.pem
     $ ls -lha /etc/salt/salthiera/keys
     -r-------- 1 root   root   1.7K Sep 24 16:24 private_key.pkcs7.pem
     -r-------- 1 root   root   1.1K Sep 24 16:24 public_key.pkcs7.pem
 
-### Use it to lookup data on the commandline!
+### Use salthiera on the saltmaster to lookup data on the commandline!
+
+    (saltmaster)
 
     $ salthiera -c /etc/salt/salthiera.yaml key1=value1 key2=value 
 
     e.g.
  
     $ salthiera -c /etc/salt/salthiera.yaml saltenvironment=production id=dmzserver01
+
+    (the keys and values you supply relate directly to the %{} delimeters in your salthiera.yaml config file (above)
 
 ### Configure salt to do this automatically as part of its external pillar processes:
 
@@ -100,7 +141,6 @@ Setup
     $ salt-call pillar.get default_string
     > I am the common default value
 
-In the above hierarchy (defined in salthiera.yaml), the specific environment YAML always overrides the common environment YAML, because it is referenced earlier in the hierarchy section. The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
 
 In this way you can manage key-value pairs, using YAML, or entire files which makes it easier to manage keys, binary files etc. 
 
