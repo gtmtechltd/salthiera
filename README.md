@@ -67,6 +67,8 @@ e.g.
 
 (the keys and values you supply relate directly to the %{} delimeters in your salthiera.yaml config file (above)
 
+In reality when salt runs, it will run the salthiera command, and supply a whole bunch of grain data as key-value pairs to the salthiera command. You get things like %{id} for free - (which is the hostname of the minion), but for the saltenvironment, we need to add this grain data to the salt minion itself.
+
 #### Configure salt to do this automatically as part of its external pillar processes:
 
 /etc/salt/master configuration file for saltmaster
