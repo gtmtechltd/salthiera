@@ -15,14 +15,14 @@ Initially this project is written in Ruby as a gem, however I intend to port to 
 Setup
 -----
 
-### Installing salthiera
+#### Installing salthiera
 
     (on saltmaster only)
 
     $ gem install salthiera
 
 
-### Define a /etc/salt/salthiera.yaml configuration file
+#### Define a /etc/salt/salthiera.yaml configuration file
 
     ---
     hierarchy:
@@ -42,7 +42,7 @@ In the above hierarchy (defined in salthiera.yaml), the specific environment YAM
 
 The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are encrypted yaml files (prefixed with eyaml:), and raw files (which might contain public SSL certs, prefixed with files:), and encrypted raw files (which might contain private SSL keys, prefixed with efiles:). 
 
-### Put some example YAML files together (representing your environment-based data)
+#### Put some example YAML files together (representing your environment-based data)
 
 /srv/salt/environments/production/example.yaml
 
@@ -55,7 +55,7 @@ The hierarchy supports YAML files (prefixed with yaml:), EYAML files which are e
     my_string: I am the common value
     default_string: I am the common default value
 
-### Use salthiera on the saltmaster to lookup data on the commandline!
+#### Use salthiera on the saltmaster to lookup data on the commandline!
 
 (saltmaster)
 
@@ -67,7 +67,7 @@ e.g.
 
 (the keys and values you supply relate directly to the %{} delimeters in your salthiera.yaml config file (above)
 
-### Configure salt to do this automatically as part of its external pillar processes:
+#### Configure salt to do this automatically as part of its external pillar processes:
 
 /etc/salt/master configuration file for saltmaster
 
@@ -78,7 +78,7 @@ e.g.
 
     #pillar_roots:  (comment this out unless you want to use pillar in conjunction with salthiera)
 
-### Copy the salthiera.py file in this repos salt/pillar directory into salts pymodules (will depend on your python version and install location)
+#### Copy the salthiera.py file in this repos salt/pillar directory into salts pymodules (will depend on your python version and install location)
 
     $ cp salt/pillar/salthiera.py /usr/share/pyshared/salt/pillar/salthiera.py
     $ ln -s /usr/share/pyshared/salt/pillar/salthiera.py /usr/lib/pymodules/python2.7/salt/pillar/salthiera.py
@@ -92,7 +92,7 @@ e.g.
       saltenvironment: production    # different on different environments
     ...
 
-### Test on the minion
+#### Test on the minion
 
     $ salt-call pillar.get my_string
     > I am the production value
@@ -107,7 +107,7 @@ Encryption
 
 Salthiera support encrypting using the PKCS7 encryption format. Salthiera has a "sister" project for puppet called hiera-eyaml, which we will use on our local machine to manage the encryption. Hiera-eyaml does not need to be installed anywhere else.
 
-### Generate keys for encrypting stuff LOCALLY (if you dont want to do this, then bypass this section)
+#### Generate keys for encrypting stuff LOCALLY (if you dont want to do this, then bypass this section)
 
     (on your local desktop)
 
@@ -117,7 +117,7 @@ Salthiera support encrypting using the PKCS7 encryption format. Salthiera has a 
     $ ls keys/
       private_key.pkcs7.pem  public_key.pkcs7.pem
 
-### Encrypt a sensitive password like this
+#### Encrypt a sensitive password like this
 
     $ eyaml encrypt --pkcs7-public-key keys/public_key.pkcs7.pem -s "SOME STRING TO ENCRYPT"
       ENC[PKCS7,..........]
@@ -135,7 +135,7 @@ Hiera-eyaml toolset allows you to do a lot of things, for example you can intera
 
 When done, copy the public_key.pkcs7.pem into your salt git repo somewhere nice (you can publish this to your dev team)
 
-### Set up the salt-master to decrypt the values
+#### Set up the salt-master to decrypt the values
  
 Copy the public and private keys you generated above into your saltmaster in a secure place:
 
