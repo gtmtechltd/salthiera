@@ -131,6 +131,22 @@ Salthiera support encrypting using the PKCS7 encryption format. Salthiera has a 
     ---
     database_password: ENC[PKCS7,............]
 
+#### EYAML files
+
+Eyaml files in your data hierarchy are exactly the same as YAML files, they just have the ENC[PKCS7,.....] blocks in place of values. Note that you can mix and match ENC[] blocks with plaintext values in the same .eyaml file, that's up to you. But salthiera will not decrypt ENC[] blocks, unless there is a matching eyaml: line in the hierarchy section of salthiera.yaml config file
+
+#### EFILES
+
+Salthiera also supports encrypted entire files, which is useful for sensitive binary files (e.g. .DER private keys), or even "plaintext" .PEM private keys that need encrypting.
+
+To encrypt an entire file:
+
+    $ eyaml encrypt --pkcs7-public-key keys/public_key.pkcs7.pem -f file -o string > encryptedfile
+
+In the above salthiera.yaml config example, you would then copy encryptedfile into the "efiles" section of your data hierarchy
+
+#### Encryption Notes 
+
 You would typically generate different keys for different environments and use the correct environments keys to generate encrypted data for that environment. 
 
 Hiera-eyaml toolset allows you to do a lot of things, for example you can interactively edit an .eyaml file using vi, replacing the encrypted tokens in realtime. For further information see the hiera-eyaml project to see all the possibilities available to you
