@@ -22,8 +22,7 @@ module SaltHiera
             obj[k] = self.recurse v
           end
         elsif obj.is_a? String
-          obj = obj.gsub(/ENC\[PKCS7,(.*?)\]/) {|x| puts "*******" + $1
-            self.decrypt($1) }
+          obj = obj.gsub(/ENC\[PKCS7,(.*?)\]/) {|x| self.decrypt($1) }
         else
           obj
         end
