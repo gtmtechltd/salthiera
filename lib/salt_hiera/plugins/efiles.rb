@@ -51,9 +51,6 @@ module SaltHiera
 
       end
 
-
-      end
-
     end
   end
 end
