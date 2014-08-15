@@ -182,6 +182,15 @@ TROUBLESHOOTING
 
 If for some reason salt isnt returning ANY values (either plaintext or encyrpted), but salthiera commandline lookups executed properly as explained above is, then the chances are that salt cannot find the "salthiera" binary that comes with this gem. If so, alter the salt.utils.which value in /usr/share/pyshared/salt/pillar/salthiera.py that refers to the salthiera binary and supply the fully qualified path to the salthiera binary (and likewise lower in the code too). This will fix this problem.
 
+The salthiera command outputs debug to /tmp/salthiera.log
+
+The logfile and log level can be configured in the salthiera.yaml config file 
+
+```
+:logfile: /tmp/some-other-logfile
+:loglevel: :debug
+```
+
 Authors
 -------
 
