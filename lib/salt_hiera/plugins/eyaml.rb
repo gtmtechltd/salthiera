@@ -48,11 +48,8 @@ module SaltHiera
 
         public_key_x509 = OpenSSL::X509::Certificate.new( public_key_pem )
 
-        ciphertext = Base64.decode64(cipherbinary) 
+        ciphertext = Base64.decode64(cipherbinary)
         pkcs7 = OpenSSL::PKCS7.new( ciphertext )
-
-
-
 
         pkcs7.decrypt(private_key_rsa, public_key_x509)
 
